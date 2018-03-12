@@ -109,7 +109,7 @@ spec = parallel $ do
 
 escapeChars :: [(Char, String)] -> String -> String
 escapeChars charMap =
-  foldMap
+  concatMap
     (\c ->
        case lookup c charMap of
          Nothing -> [c]
