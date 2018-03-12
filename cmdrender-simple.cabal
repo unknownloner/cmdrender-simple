@@ -44,7 +44,7 @@ test-suite cmdrender-simple-tests
       base
     , cmdrender-simple
     , QuickCheck
-    , hspec >= 2.4.4 && < 3.0
+    , hspec >= 2.4 && < 3.0
     , hspec-core
   if !impl(ghc >= 8)
     build-depends:
