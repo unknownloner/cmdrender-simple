@@ -1,0 +1,4 @@
+--qc-max-success 1000
+--qc-max-size 100
+--failure-report .hspec-failures
+--rerun

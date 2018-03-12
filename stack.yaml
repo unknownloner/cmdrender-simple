@@ -1,0 +1,10 @@
+resolver: lts-10.8
+
+packages:
+- .
+
+build:
+  test-arguments:
+    additional-args:
+      - "+RTS"
+      - "-N"
