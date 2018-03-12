@@ -1,4 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
 module Command.Render
   ( CmdArgs
   , shortFlag
@@ -15,16 +14,17 @@ module Command.Render
 
 import Data.Semigroup
 import Data.String
+import Data.Foldable
 
-newtype CmdArg =
-  CmdArg String
-  deriving (Eq)
+newtype CmdArg = CmdArg
+  { unCmdArg :: String
+  }
 
 instance IsString CmdArg where
   fromString = CmdArg
 
 newtype CmdArgs = CmdArgs
-  { unCmdArgs :: forall m. Monoid m => (CmdArg -> m) -> m
+  { unCmdArgs :: Endo [CmdArg]
   }
 
 instance Eq CmdArgs where
@@ -45,22 +45,20 @@ instance Read CmdArgs where
       return (cmdFromList xs, t)
 
 instance Semigroup CmdArgs where
-  (CmdArgs f) <> (CmdArgs g) = CmdArgs (\h -> f h `mappend` g h)
+  (CmdArgs f) <> (CmdArgs g) = CmdArgs (f <> g)
 
 instance Monoid CmdArgs where
-  mempty = CmdArgs (\_ -> mempty)
+  mempty = CmdArgs mempty
   mappend = (<>)
 
 instance IsString CmdArgs where
   fromString = singleton . fromString
 
 singleton :: CmdArg -> CmdArgs
-singleton x = CmdArgs (\h -> h x)
+singleton x = CmdArgs (Endo (x :))
 
 getRawArgs :: CmdArgs -> [String]
-getRawArgs args = appEndo (unCmdArgs args renderArg) []
-  where
-    renderArg (CmdArg str) = Endo (str :)
+getRawArgs args = map unCmdArg (appEndo (unCmdArgs args) [])
 
 renderEscaped :: (Char -> Maybe String) -> String -> Endo String
 renderEscaped escape = foldMap esc
@@ -86,7 +84,7 @@ renderEscapedQuotes QuoteDouble = renderEscaped esc
     
 renderShell :: QuoteChar -> FilePath -> CmdArgs -> String
 renderShell qc fp args =
-  appEndo (quoted fp <> unCmdArgs args renderArg) []
+  appEndo (quoted fp <> foldMap renderArg (appEndo (unCmdArgs args) [])) []
   where
     char c = Endo (c :)
     quote =
